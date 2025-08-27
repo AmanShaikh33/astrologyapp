@@ -15,7 +15,7 @@ const Chat = () => {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#e0c878" />
         </TouchableOpacity>
-        <Text className="text-lg font-bold text-[#e0c878] ml-[100px]">Kundli Matching</Text>
+        <Text className="text-lg font-bold text-[#e0c878] ml-[140px]">Chat</Text>
       </View>
       <View className="px-4 mt-6">
       <AstrologerComponent
