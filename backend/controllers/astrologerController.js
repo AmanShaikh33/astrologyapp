@@ -6,6 +6,11 @@ export const createProfile = async (req, res) => {
   try {
     const { bio, skills, languages, pricePerMinute, experience } = req.body;
 
+ 
+    if (!bio) {
+      return res.status(400).json({ message: "Bio is required" });
+    }
+
     const astrologer = await Astrologer.create({
       userId: req.user.id,
       bio,
@@ -13,7 +18,8 @@ export const createProfile = async (req, res) => {
       languages: languages.split(","),
       pricePerMinute,
       experience,
-      profilePic: req.file ? req.file.path : null
+      profilePic: req.file ? req.file.path : null,
+      isApproved: "pending"
     });
 
     res.status(201).json({ message: "Profile created successfully", astrologer });
@@ -80,19 +86,92 @@ export const deleteProfile = async (req, res) => {
 };
 
 // Get All Astrologers (for user browsing)
+// Get All Approved Astrologers with Filters
 export const getAllAstrologers = async (req, res) => {
   try {
-    const astrologers = await Astrologer.find({ isApproved: true })
-      .select("-userId -__v -createdAt -updatedAt");
+    const { skills, languages, priceMin, priceMax, availability, page = 1, limit = 10 } = req.query;
+
+    let filter = { isApproved: "approved" };
+
+    if (skills) {
+      filter.skills = { $regex: skills, $options: "i" }; // case-insensitive
+    }
+
+    if (languages) {
+      filter.languages = { $regex: languages, $options: "i" };
+    }
+
+    if (availability) {
+      filter.availability = availability; // online or offline
+    }
+
+    if (priceMin || priceMax) {
+      filter.pricePerMinute = {};
+      if (priceMin) filter.pricePerMinute.$gte = Number(priceMin);
+      if (priceMax) filter.pricePerMinute.$lte = Number(priceMax);
+    }
+
+    const skip = (page - 1) * limit;
+
+    const astrologers = await Astrologer.find(filter)
+      .select("-userId -__v -createdAt -updatedAt")
+      .skip(skip)
+      .limit(Number(limit));
+
+    const total = await Astrologer.countDocuments(filter);
 
     res.status(200).json({
       success: true,
       count: astrologers.length,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
       astrologers
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+// controllers/astrologerController.js
+export const updateAvailability = async (req, res) => {
+  try {
+    console.log("Body:", req.body);
+    console.log("User ID from token:", req.user.id);
+
+    const { availability } = req.body;
+
+    // Validate availability input
+    if (!availability || !["online", "offline"].includes(availability)) {
+      return res.status(400).json({ success: false, message: "Invalid availability status" });
+    }
+
+    // Update only availability without full validation
+    const astrologer = await Astrologer.findOneAndUpdate(
+      { userId: req.user.id },
+      { availability },
+      { new: true } // return the updated document
+    );
+
+    if (!astrologer) {
+      return res.status(404).json({ success: false, message: "Astrologer not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Status updated to ${availability}`,
+      astrologer
+    });
+  } catch (error) {
+    console.error("Error updating availability:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+
+
+
+
 
 

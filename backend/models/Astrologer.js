@@ -6,19 +6,38 @@ const astrologerSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
-  bio: String,
-  skills: [String],
-  languages: [String],
-  pricePerMinute: Number,
-  experience: Number,
-  profilePic: String,
-  availability: {
+  bio: {
     type: String,
-    default: "offline"
+    required: true
   },
-  isApproved: {
-    type: Boolean,
-    default: false // New astrologers need approval
+  skills: {
+    type: [String],
+    default: []
+  },
+  languages: {
+    type: [String],
+    default: []
+  },
+  pricePerMinute: {
+    type: Number,
+    required: true
+  },
+  experience: {
+    type: String,
+    required: true
+  },
+  profilePic: {
+    type: String
+  },
+  availability: {
+  type: String,
+  enum: ["online", "offline"],
+  default: "offline"
+},
+isApproved: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending"
   }
 }, { timestamps: true });
 

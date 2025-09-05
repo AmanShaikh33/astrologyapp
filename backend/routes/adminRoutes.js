@@ -1,5 +1,5 @@
 import express from "express";
-import { getPendingAstrologers, approveAstrologer, rejectAstrologer } from "../controllers/adminController.js";
+import { getPendingAstrologers, approveAstrologer, rejectAstrologer,getAstrologersWithFilter } from "../controllers/adminController.js";
 import { protect, verifyRole } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -8,6 +8,8 @@ const router = express.Router();
 router.get("/astrologers/pending", protect, verifyRole(["admin"]), getPendingAstrologers);
 router.put("/astrologers/approve/:id", protect, verifyRole(["admin"]), approveAstrologer);
 router.delete("/astrologers/reject/:id", protect, verifyRole(["admin"]), rejectAstrologer);
+router.get("/astrologers", protect, verifyRole(["admin"]), getAstrologersWithFilter);
+
 
 console.log("Admin routes loaded");
 
