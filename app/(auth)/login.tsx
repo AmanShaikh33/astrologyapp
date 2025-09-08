@@ -1,49 +1,101 @@
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiLogin } from "../../api/api";
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Check if already logged in
+  useEffect(() => {
+    const checkLoggedIn = async () => {
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("userData");
+      if (token && userStr) {
+        const user = JSON.parse(userStr);
+        // Role-based redirect
+        if (user.role === "admin") router.replace("/admindashboard/home");
+        else if (user.role === "user") router.replace("/dashboard/home");
+        else if (user.role === "astrologer") router.replace("/astrologerdashboard/home");
+        else router.replace("/dashboard/home");
+      }
+    };
+    checkLoggedIn();
+  }, []);
+
+  const onLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter email and password");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const loginRes = await apiLogin({ email, password });
+      const token = loginRes.token;
+      if (!token) throw new Error("No token returned from login");
+
+      const user = loginRes.user || loginRes; // adjust based on API
+
+      // Save in AsyncStorage
+      await AsyncStorage.setItem("token", token);
+      await AsyncStorage.setItem("userData", JSON.stringify(user));
+      await AsyncStorage.setItem("userType", user.role || "user");
+
+      // Role-based redirect
+      if (user.role === "admin") router.replace("/admindashboard/home");
+      else if (user.role === "user") router.replace("/dashboard/home");
+      else if (user.role === "astrologer") router.replace("/astrologerdashboard/home");
+      else router.replace("/dashboard/home");
+
+    } catch (error: any) {
+      Alert.alert("Login Failed", error.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 justify-center px-6"
-      style={{ backgroundColor: "#2d1e3f" }} // Deep Purple background
+      style={{ backgroundColor: "#2d1e3f" }}
     >
-      {/* Title */}
       <Text
         className="text-4xl font-bold text-center mb-2"
-        style={{ color: "#e0c878" }} // Golden Yellow
+        style={{ color: "#e0c878" }}
       >
         Welcome Back
       </Text>
-      <Text
-        className="text-center mb-10"
-        style={{ color: "#9e8b4e" }} // Earthy Gold
-      >
+      <Text className="text-center mb-10" style={{ color: "#9e8b4e" }}>
         Login to continue your journey
       </Text>
 
-      {/* Email Field */}
       <TextInput
         value={email}
         onChangeText={setEmail}
         placeholder="Enter your email"
-        placeholderTextColor="#9e8b4e" // Earthy Gold placeholder
+        placeholderTextColor="#9e8b4e"
         keyboardType="email-address"
         autoCapitalize="none"
         className="border rounded-xl px-4 py-3 mb-4 shadow-sm"
-        style={{
-          borderColor: "#9e8b4e", // Earthy Gold border
-          backgroundColor: "#604f70", // Muted Lavender background
-          color: "#e0c878", // Golden Yellow text
-        }}
+        style={{ borderColor: "#9e8b4e", backgroundColor: "#604f70", color: "#e0c878" }}
       />
 
-      {/* Password Field */}
       <TextInput
         value={password}
         onChangeText={setPassword}
@@ -51,32 +103,26 @@ export default function LoginScreen() {
         placeholderTextColor="#9e8b4e"
         secureTextEntry
         className="border rounded-xl px-4 py-3 mb-6 shadow-sm"
-        style={{
-          borderColor: "#9e8b4e",
-          backgroundColor: "#604f70",
-          color: "#e0c878",
-        }}
+        style={{ borderColor: "#9e8b4e", backgroundColor: "#604f70", color: "#e0c878" }}
       />
 
-      {/* Login Button */}
       <TouchableOpacity
-        onPress={() => console.log("Login Pressed")}
+        onPress={onLogin}
         className="py-4 rounded-xl shadow-md"
-        style={{ backgroundColor: "#3c2a52" }} // Dark Plum
+        style={{ backgroundColor: "#3c2a52" }}
+        disabled={loading}
       >
-        <Text
-          className="text-lg font-semibold text-center"
-          style={{ color: "#e0c878" }} // Golden Yellow text
-        >
-          Login
-        </Text>
+        {loading ? (
+          <ActivityIndicator size="small" color="#e0c878" />
+        ) : (
+          <Text className="text-lg font-semibold text-center" style={{ color: "#e0c878" }}>
+            Login
+          </Text>
+        )}
       </TouchableOpacity>
-
-      {/* Register Link */}
       <TouchableOpacity onPress={() => router.push("/register")} className="mt-6">
         <Text className="text-center" style={{ color: "#e0c878" }}>
-          New here?{" "}
-          <Text style={{ fontWeight: "bold", color: "#9e8b4e" }}>Register</Text>
+          New here? <Text style={{ fontWeight: "bold", color: "#9e8b4e" }}>Register</Text>
         </Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>

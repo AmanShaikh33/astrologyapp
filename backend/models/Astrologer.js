@@ -6,6 +6,7 @@ const astrologerSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
+
   bio: {
     type: String,
     required: true

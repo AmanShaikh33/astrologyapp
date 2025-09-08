@@ -4,9 +4,10 @@ import fs from "fs";
 // Create Profile
 export const createProfile = async (req, res) => {
   try {
+    console.log("Request body:", req.body); // Debug
+
     const { bio, skills, languages, pricePerMinute, experience } = req.body;
 
- 
     if (!bio) {
       return res.status(400).json({ message: "Bio is required" });
     }
@@ -27,6 +28,7 @@ export const createProfile = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // Get My Profile
 export const getMyProfile = async (req, res) => {

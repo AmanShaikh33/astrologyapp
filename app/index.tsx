@@ -1,11 +1,32 @@
-import { View, Text, Image, TouchableOpacity, Animated, useWindowDimensions } from "react-native";
+import { View, Text, Image, TouchableOpacity, Animated, useWindowDimensions, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import astroappimg from "../assets/images/astroappimg.png";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Index() {
   const router = useRouter();
   const { width, height } = useWindowDimensions();
+  const [loading, setLoading] = useState(true);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkLogin = async () => {
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("userData");
+      if (token && userStr) {
+        const user = JSON.parse(userStr);
+        // Redirect based on role
+        if (user.role === "admin") router.replace("/admindashboard/home");
+        else if (user.role === "user") router.replace("/dashboard/home");
+        else if (user.role === "astrologer") router.replace("/astrologerdashboard/home");
+        else router.replace("/login");
+      } else {
+        setLoading(false); // show splash page if not logged in
+      }
+    };
+    checkLogin();
+  }, []);
 
   // Animation for the astrology image
   const imageScale = useRef(new Animated.Value(0.95)).current;
@@ -29,14 +50,27 @@ export default function Index() {
     ).start();
   }, []);
 
+  const stars = [
+    { style: "absolute w-2 h-2 bg-[#e0c878] rounded-full top-10 left-5" },
+    { style: "absolute w-3 h-3 bg-[#e0c878] rounded-full top-20 right-10" },
+    { style: "absolute w-2 h-2 bg-[#e0c878] rounded-full bottom-32 left-16" },
+    { style: "absolute w-3 h-3 bg-[#e0c878] rounded-full bottom-24 right-20" },
+  ];
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-[#2d1e3f]">
+        <ActivityIndicator size="large" color="#e0c878" />
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-[#2d1e3f] items-center justify-center relative px-6">
-
       {/* Floating Stars */}
-      <View className="absolute w-2 h-2 bg-[#e0c878] rounded-full top-10 left-5" />
-      <View className="absolute w-3 h-3 bg-[#e0c878] rounded-full top-20 right-10" />
-      <View className="absolute w-2 h-2 bg-[#e0c878] rounded-full bottom-32 left-16" />
-      <View className="absolute w-3 h-3 bg-[#e0c878] rounded-full bottom-24 right-20" />
+      {stars.map((star, index) => (
+        <View key={index} className={star.style} />
+      ))}
 
       {/* Animated Astrology Image */}
       <Animated.Image

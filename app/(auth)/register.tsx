@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { apiRegister } from "../../api/api"; // create a simple register API function
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -18,8 +19,10 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("user"); // default role
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill all fields");
       return;
@@ -29,146 +32,112 @@ export default function RegisterScreen() {
       return;
     }
 
-    // API call placeholder
-    Alert.alert("Success", "Registration successful!");
-    router.push("/login");
+    setLoading(true);
+
+    try {
+      await apiRegister({ name, email, password, role }); // call your API
+      Alert.alert("Success", "Registration successful!");
+      router.push("/login");
+    } catch (error: any) {
+      Alert.alert("Error", error?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1"
-      style={{ backgroundColor: "#2d1e3f" }} // Deep Purple background
+      style={{ backgroundColor: "#2d1e3f" }}
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-        className="px-6 pt-12"
-      >
-        {/* Heading */}
-        <Text
-          className="text-4xl font-bold text-center mb-2"
-          style={{ color: "#e0c878" }} // Golden Yellow
-        >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="px-6 pt-12">
+        <Text className="text-4xl font-bold text-center mb-2" style={{ color: "#e0c878" }}>
           Create Account
         </Text>
-        <Text
-          className="text-center mb-8"
-          style={{ color: "#9e8b4e" }} // Earthy Gold
-        >
+        <Text className="text-center mb-8" style={{ color: "#9e8b4e" }}>
           Sign up to get started with your journey
         </Text>
 
-        {/* Full Name */}
-        <View className="mb-4">
-          <Text className="mb-1 font-medium" style={{ color: "#9e8b4e" }}>
-            Full Name
-          </Text>
-          <TextInput
-            className="border rounded-xl p-3 shadow-sm"
-            style={{
-              borderColor: "#9e8b4e",
-              backgroundColor: "#604f70", // Muted Lavender
-              color: "#e0c878", // Golden Yellow text
-            }}
-            placeholder="Enter your name"
-            placeholderTextColor="#9e8b4e"
-            value={name}
-            onChangeText={setName}
-          />
-        </View>
+        {/* Name */}
+        <TextInput
+          className="border rounded-xl p-3 mb-4"
+          style={{ borderColor: "#9e8b4e", backgroundColor: "#604f70", color: "#e0c878" }}
+          placeholder="Full Name"
+          placeholderTextColor="#9e8b4e"
+          value={name}
+          onChangeText={setName}
+        />
 
         {/* Email */}
-        <View className="mb-4">
-          <Text className="mb-1 font-medium" style={{ color: "#9e8b4e" }}>
-            Email
-          </Text>
-          <TextInput
-            className="border rounded-xl p-3 shadow-sm"
-            style={{
-              borderColor: "#9e8b4e",
-              backgroundColor: "#604f70",
-              color: "#e0c878",
-            }}
-            placeholder="Enter your email"
-            placeholderTextColor="#9e8b4e"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
-        </View>
+        <TextInput
+          className="border rounded-xl p-3 mb-4"
+          style={{ borderColor: "#9e8b4e", backgroundColor: "#604f70", color: "#e0c878" }}
+          placeholder="Email"
+          placeholderTextColor="#9e8b4e"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+        />
 
         {/* Password */}
-        <View className="mb-4">
-          <Text className="mb-1 font-medium" style={{ color: "#9e8b4e" }}>
-            Password
-          </Text>
-          <TextInput
-            className="border rounded-xl p-3 shadow-sm"
-            style={{
-              borderColor: "#9e8b4e",
-              backgroundColor: "#604f70",
-              color: "#e0c878",
-            }}
-            placeholder="Enter your password"
-            placeholderTextColor="#9e8b4e"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-        </View>
+        <TextInput
+          className="border rounded-xl p-3 mb-4"
+          style={{ borderColor: "#9e8b4e", backgroundColor: "#604f70", color: "#e0c878" }}
+          placeholder="Password"
+          placeholderTextColor="#9e8b4e"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
 
         {/* Confirm Password */}
-        <View className="mb-6">
-          <Text className="mb-1 font-medium" style={{ color: "#9e8b4e" }}>
-            Confirm Password
-          </Text>
-          <TextInput
-            className="border rounded-xl p-3 shadow-sm"
-            style={{
-              borderColor: "#9e8b4e",
-              backgroundColor: "#604f70",
-              color: "#e0c878",
-            }}
-            placeholder="Re-enter your password"
-            placeholderTextColor="#9e8b4e"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
+        <TextInput
+          className="border rounded-xl p-3 mb-4"
+          style={{ borderColor: "#9e8b4e", backgroundColor: "#604f70", color: "#e0c878" }}
+          placeholder="Confirm Password"
+          placeholderTextColor="#9e8b4e"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
+
+        {/* Role Selection */}
+        <View className="flex-row justify-between mb-6">
+          <TouchableOpacity
+            onPress={() => setRole("user")}
+            className={`flex-1 py-3 rounded-xl mr-2 ${role === "user" ? "bg-[#3c2a52]" : "bg-[#604f70]"}`}
+          >
+            <Text className="text-center font-semibold" style={{ color: "#e0c878" }}>
+              User
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setRole("astrologer")}
+            className={`flex-1 py-3 rounded-xl ml-2 ${role === "astrologer" ? "bg-[#3c2a52]" : "bg-[#604f70]"}`}
+          >
+            <Text className="text-center font-semibold" style={{ color: "#e0c878" }}>
+              Astrologer
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Register Button */}
         <TouchableOpacity
-          className="py-3 rounded-xl shadow-md"
-          style={{ backgroundColor: "#3c2a52" }} // Dark Plum
+          className="py-3 rounded-xl shadow-md mb-4"
+          style={{ backgroundColor: "#3c2a52" }}
           onPress={handleRegister}
+          disabled={loading}
         >
-          <Text
-            className="text-center text-lg font-semibold"
-            style={{ color: "#e0c878" }}
-          >
-            Register
+          <Text className="text-center text-lg font-semibold" style={{ color: "#e0c878" }}>
+            {loading ? "Registering..." : "Register"}
           </Text>
         </TouchableOpacity>
 
-        {/* Login Link */}
-        <TouchableOpacity onPress={() => router.push("/login")} className="mt-6">
+        <TouchableOpacity onPress={() => router.push("/login")}>
           <Text className="text-center" style={{ color: "#e0c878" }}>
-            Already have an account?{" "}
-            <Text style={{ fontWeight: "bold", color: "#9e8b4e" }}>Login</Text>
-          </Text>
-        </TouchableOpacity>
-
-        {/* Debug / Direct to Home */}
-        <TouchableOpacity
-          onPress={() => router.push("/dashboard/(tabs)/home")}
-          className="mt-6"
-        >
-          <Text className="text-center" style={{ color: "#e0c878" }}>
-            Go to home page{" "}
-            <Text style={{ fontWeight: "bold", color: "#9e8b4e" }}>Login</Text>
+            Already have an account? <Text style={{ fontWeight: "bold", color: "#9e8b4e" }}>Login</Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>

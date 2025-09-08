@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, Button } from "react-native";
+import { View, Text, Button, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function HomeScreen() {
+const UserHome = () => {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,12 @@ export default function HomeScreen() {
         }
 
         const parsedUser = JSON.parse(userStr);
+
+        if (parsedUser.role !== "astrologer") {
+          router.replace("/login"); // if not user
+          return;
+        }
+
         setUser(parsedUser);
       } catch (err) {
         console.error(err);
@@ -52,8 +58,9 @@ export default function HomeScreen() {
       <Text className="text-2xl font-bold text-[#e0c878]">
         Welcome, {user?.name || "User"}
       </Text>
-      <Text className="text-[#9e8b4e] mt-2">Role: {user?.role}</Text>
       <Button title="Logout" onPress={handleLogout} color="#3c2a52" />
     </View>
   );
-}
+};
+
+export default UserHome;
