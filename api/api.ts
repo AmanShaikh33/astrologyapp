@@ -124,4 +124,64 @@ export const apiGetAllAstrologers = async (token: string, filters?: {
   }
 };
 
+export const apiGetPendingAstrologers = async (token: string) => {
+  try {
+    const res = await api.get("/admin/astrologers/pending", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.data; // { success, count, astrologers }
+  } catch (error: any) {
+    throw error.response?.data || { message: "Get pending astrologers failed" };
+  }
+};
+
+// Approve astrologer
+export const apiApproveAstrologer = async (token: string, id: string) => {
+  try {
+    const res = await api.put(`/admin/astrologers/approve/${id}`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.data; // { message, astrologer }
+  } catch (error: any) {
+    throw error.response?.data || { message: "Approve astrologer failed" };
+  }
+};
+
+// Reject astrologer (delete)
+export const apiRejectAstrologer = async (token: string, id: string) => {
+  try {
+    const res = await api.delete(`/admin/astrologers/reject/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.data; // { message }
+  } catch (error: any) {
+    throw error.response?.data || { message: "Reject astrologer failed" };
+  }
+};
+
+// Get astrologers with filter (approved/pending)
+export const apiGetAstrologersWithFilter = async (token: string, status?: "pending" | "approved") => {
+  try {
+    const res = await api.get("/admin/astrologers", {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { status },
+    });
+    return res.data; // { success, count, astrologers }
+  } catch (error: any) {
+    throw error.response?.data || { message: "Get astrologers with filter failed" };
+  }
+};
+
+// Get only approved astrologers (public endpoint for users)
+export const apiGetApprovedAstrologers = async () => {
+  try {
+    const res = await api.get("/astrologers/approved"); // no token header
+    return res.data;
+  } catch (error: any) {
+    throw error.response?.data || { message: "Get approved astrologers failed" };
+  }
+};
+
+
+
 export default api;

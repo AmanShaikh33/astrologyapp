@@ -6,39 +6,86 @@ import {
   Image,
   ActivityIndicator,
   TouchableOpacity,
-  StyleSheet,
+  Modal,
+  TextInput,
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiGetMyProfile } from "../../../api/api";
+import { apiGetMyProfile, apiGetMe, apiUpdateProfile } from "../../../api/api";
 import { Ionicons } from "@expo/vector-icons";
 
 const BASE_URL = "http://192.168.0.174:5000"; // Your backend URL
 
-const Profile = ({ navigation }: any) => {
+export default function Profile({ navigation }: any) {
   const [profile, setProfile] = useState<any>(null);
+  const [userName, setUserName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+
+  // Editable fields (local state for modal)
+  const [bio, setBio] = useState("");
+  const [skills, setSkills] = useState("");
+  const [languages, setLanguages] = useState("");
+  const [price, setPrice] = useState("");
+  const [experience, setExperience] = useState("");
+
+  // 🔹 Fetch Profile Data
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("token");
+      if (!token) return;
+
+      const userData = await apiGetMe(token);
+      setUserName(userData.name);
+
+      const data = await apiGetMyProfile(token);
+      setProfile(data);
+
+      // Pre-fill fields for editing
+      setBio(data.bio || "");
+      setSkills(Array.isArray(data.skills) ? data.skills.join(", ") : data.skills || "");
+      setLanguages(Array.isArray(data.languages) ? data.languages.join(", ") : data.languages || "");
+      setPrice(data.pricePerMinute?.toString() || "");
+      setExperience(data.experience?.toString() || "");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = await AsyncStorage.getItem("token");
-        if (!token) return;
-
-        const data = await apiGetMyProfile(token);
-        setProfile(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProfile();
   }, []);
 
+  // 🔹 Handle Profile Update
+  const handleUpdateProfile = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) return;
+
+      const formData = new FormData();
+      formData.append("bio", bio);
+      formData.append("skills", skills);
+      formData.append("languages", languages);
+      formData.append("pricePerMinute", price);
+      formData.append("experience", experience);
+
+      await apiUpdateProfile(token, formData);
+
+      await fetchProfile(); // ✅ refresh after update
+      Alert.alert("Success", "Profile updated!");
+      setEditModalVisible(false);
+    } catch (err: any) {
+      console.error(err);
+      Alert.alert("Error", err.message || "Failed to update profile");
+    }
+  };
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View className="flex-1 bg-white justify-center items-center">
         <ActivityIndicator size="large" color="#e0c878" />
       </View>
     );
@@ -46,163 +93,168 @@ const Profile = ({ navigation }: any) => {
 
   if (!profile) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={{ color: "#fff" }}>No profile data found</Text>
+      <View className="flex-1 bg-white justify-center items-center">
+        <Text className="text-gray-500 text-lg">No profile data found</Text>
       </View>
     );
   }
 
-  const imageUrl =
-    profile.profilePic?.startsWith("http") || !profile.profilePic
+  // ✅ Fix the image URL
+  const imageUrl = profile.profilePic
+    ? profile.profilePic.startsWith("http")
       ? profile.profilePic
-      : `${BASE_URL}/${profile.profilePic}`;
+      : `${BASE_URL}/${profile.profilePic.replace(/\\/g, "/")}`
+    : null;
 
   return (
-    <ScrollView style={styles.container}>
+    <View className="flex-1 bg-white">
       {/* Header */}
-      <View style={styles.header}>
+      <View className="flex-row items-center p-4 border-b border-gray-200 bg-[#2d1e3f] pt-[40px]">
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#e0c878" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Profile</Text>
+        <Text className="text-lg font-bold text-[#e0c878] ml-[100px]">My Profile</Text>
       </View>
 
-      <View style={styles.formContainer}>
-        {/* Profile Picture */}
-        <View style={styles.card}>
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.image} />
+      <ScrollView className="px-4 mt-6">
+        <View className="bg-white rounded-2xl shadow-xl p-6 mb-10 border border-gray-200">
+          {/* Profile Image */}
+          <View className="items-center mb-6">
+            {imageUrl ? (
+              <Image
+                source={{ uri: imageUrl }}
+                className="w-32 h-32 rounded-full mb-2 border-4 border-[#e0c878] shadow-lg"
+              />
+            ) : (
+              <View className="w-32 h-32 rounded-full bg-gray-300 justify-center items-center mb-2">
+                <Text className="text-gray-600">No Image</Text>
+              </View>
+            )}
+            <Text className="text-xl font-bold text-[#2d1e3f] mt-2">{userName}</Text>
+          </View>
+
+          {/* Details Section */}
+          <View className="space-y-5">
+            <View>
+              <Text className="text-gray-700 font-semibold mb-1">Bio</Text>
+              <Text className="text-gray-800 text-base">{profile.bio}</Text>
+            </View>
+
+            <View>
+              <Text className="text-gray-700 font-semibold mb-1">Skills</Text>
+              <Text className="text-gray-800 text-base">
+                {Array.isArray(profile.skills) ? profile.skills.join(", ") : profile.skills}
+              </Text>
+            </View>
+
+            <View>
+              <Text className="text-gray-700 font-semibold mb-1">Languages</Text>
+              <Text className="text-gray-800 text-base">
+                {Array.isArray(profile.languages) ? profile.languages.join(", ") : profile.languages}
+              </Text>
+            </View>
+
+            <View>
+              <Text className="text-gray-700 font-semibold mb-1">Price per Minute (₹)</Text>
+              <Text className="text-gray-800 text-base">{profile.pricePerMinute}</Text>
+            </View>
+
+            <View>
+              <Text className="text-gray-700 font-semibold mb-1">Experience</Text>
+              <Text className="text-gray-800 text-base">{profile.experience} years</Text>
+            </View>
+
+            <View className="mt-6">
+              <Text
+                className={`text-center font-semibold px-4 py-2 rounded-lg ${
+                  profile.isApproved === "approved"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-yellow-100 text-yellow-700"
+                }`}
+              >
+                Approval: {profile.isApproved || "pending"}
+              </Text>
+            </View>
+          </View>
+
+          {/* 🔹 Edit Button OR Message */}
+          {profile.isApproved === "approved" ? (
+            <TouchableOpacity
+              className="bg-[#e0c878] mt-6 py-3 rounded-lg items-center"
+              onPress={() => setEditModalVisible(true)}
+            >
+              <Text className="text-[#2d1e3f] font-bold text-lg">Edit Profile</Text>
+            </TouchableOpacity>
           ) : (
-            <View style={styles.placeholder}>
-              <Text style={{ color: "#888" }}>No Image</Text>
+            <View className="bg-yellow-100 mt-6 py-3 rounded-lg items-center border border-yellow-300">
+              <Text className="text-yellow-700 font-semibold text-lg">
+                You can edit your profile after approval.
+              </Text>
             </View>
           )}
-
-          {/* Name */}
-          <Text style={styles.label}>Full Name</Text>
-          <Text style={styles.text}>{profile.name}</Text>
-
-          {/* Bio */}
-          <Text style={styles.label}>Bio</Text>
-          <Text style={styles.text}>{profile.bio}</Text>
-
-          {/* Skills */}
-          <Text style={styles.label}>Skills</Text>
-          <Text style={styles.text}>{profile.skills?.join(", ")}</Text>
-
-          {/* Languages */}
-          <Text style={styles.label}>Languages</Text>
-          <Text style={styles.text}>{profile.languages?.join(", ")}</Text>
-
-          {/* Price */}
-          <Text style={styles.label}>Price per Minute (₹)</Text>
-          <Text style={styles.text}>{profile.pricePerMinute}</Text>
-
-          {/* Experience */}
-          <Text style={styles.label}>Experience</Text>
-          <Text style={styles.text}>{profile.experience} years</Text>
-
-          {/* Approval Status */}
-          <Text
-            style={[
-              styles.approval,
-              profile.isApproved === "approved"
-                ? styles.approved
-                : styles.pending,
-            ]}
-          >
-            Approval: {profile.isApproved || "pending"}
-          </Text>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+
+      {/* 🔹 Edit Profile Modal */}
+      <Modal visible={editModalVisible} animationType="slide" transparent={true}>
+        <View className="flex-1 bg-black bg-opacity-50 justify-center items-center">
+          <View className="bg-white w-11/12 rounded-2xl p-6">
+            <Text className="text-xl font-bold text-[#2d1e3f] mb-4">Edit Profile</Text>
+
+            <ScrollView>
+              <TextInput
+                placeholder="Bio"
+                value={bio}
+                onChangeText={setBio}
+                className="border border-gray-300 rounded-lg px-3 py-2 mb-3 text-black"
+                multiline
+              />
+              <TextInput
+                placeholder="Skills (comma separated)"
+                value={skills}
+                onChangeText={setSkills}
+                className="border border-gray-300 rounded-lg px-3 py-2 mb-3 text-black"
+              />
+              <TextInput
+                placeholder="Languages (comma separated)"
+                value={languages}
+                onChangeText={setLanguages}
+                className="border border-gray-300 rounded-lg px-3 py-2 mb-3 text-black"
+              />
+              <TextInput
+                placeholder="Price per Minute"
+                value={price}
+                onChangeText={setPrice}
+                keyboardType="numeric"
+                className="border border-gray-300 rounded-lg px-3 py-2 mb-3 text-black"
+              />
+              <TextInput
+                placeholder="Experience (years)"
+                value={experience}
+                onChangeText={setExperience}
+                keyboardType="numeric"
+                className="border border-gray-300 rounded-lg px-3 py-2 mb-3 text-black"
+              />
+
+              <View className="flex-row justify-between mt-4">
+                <TouchableOpacity
+                  className="bg-gray-400 py-3 px-6 rounded-lg"
+                  onPress={() => setEditModalVisible(false)}
+                >
+                  <Text className="text-white font-bold">Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="bg-[#e0c878] py-3 px-6 rounded-lg"
+                  onPress={handleUpdateProfile}
+                >
+                  <Text className="text-[#2d1e3f] font-bold">Save</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
-};
-
-export default Profile;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#2d1e3f",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#2d1e3f",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#604f70",
-    paddingTop: 50,
-    backgroundColor: "#2d1e3f",
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#e0c878",
-    marginLeft: 80,
-  },
-  formContainer: {
-    padding: 16,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 5,
-    alignItems: "center",
-  },
-  image: {
-    width: 128,
-    height: 128,
-    borderRadius: 64,
-    marginBottom: 16,
-  },
-  placeholder: {
-    width: 128,
-    height: 128,
-    borderRadius: 64,
-    backgroundColor: "#ccc",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  label: {
-    alignSelf: "flex-start",
-    fontWeight: "bold",
-    color: "#604f70",
-    marginTop: 8,
-  },
-  text: {
-    alignSelf: "flex-start",
-    color: "#2d1e3f",
-    marginBottom: 4,
-    fontSize: 16,
-  },
-  approval: {
-    marginTop: 12,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  approved: {
-    backgroundColor: "#d4edda",
-    color: "#155724",
-  },
-  pending: {
-    backgroundColor: "#fff3cd",
-    color: "#856404",
-  },
-});
+}

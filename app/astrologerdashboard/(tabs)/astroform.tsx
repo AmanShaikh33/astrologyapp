@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,12 +13,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiCreateProfile } from "../../../api/api";
+import { apiCreateProfile, apiGetMyProfile } from "../../../api/api";
 
 export default function AstroForm() {
   const router = useRouter();
 
-  const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [skills, setSkills] = useState("");
   const [languages, setLanguages] = useState("");
@@ -26,8 +25,38 @@ export default function AstroForm() {
   const [experience, setExperience] = useState("");
   const [profilePic, setProfilePic] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [profileExists, setProfileExists] = useState(false); // track if profile is created
+
+  // Check if profile already exists
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true);
+      const token = await AsyncStorage.getItem("token");
+      if (!token) return;
+
+      const res = await apiGetMyProfile(token);
+      if (res.profile) {
+        setProfileExists(true);
+        setBio(res.profile.bio || "");
+        setSkills(res.profile.skills?.join(", ") || "");
+        setLanguages(res.profile.languages?.join(", ") || "");
+        setPrice(String(res.profile.pricePerMinute || ""));
+        setExperience(String(res.profile.experience || ""));
+        if (res.profile.profilePic) setProfilePic({ uri: res.profile.profilePic });
+      }
+    } catch (err) {
+      console.log("No profile yet");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const pickImage = async () => {
+    if (profileExists) return; // disable picking image
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
@@ -39,7 +68,7 @@ export default function AstroForm() {
   };
 
   const handleCreateProfile = async () => {
-    if (!name || !bio || !skills || !languages || !price || !experience) {
+    if (!bio || !skills || !languages || !price || !experience) {
       Alert.alert("Error", "Please fill all fields");
       return;
     }
@@ -54,7 +83,7 @@ export default function AstroForm() {
       formData.append("pricePerMinute", price);
       formData.append("experience", experience);
 
-      if (profilePic) {
+      if (profilePic && !profileExists) {
         formData.append("profilePic", {
           uri: profilePic.uri,
           type: "image/jpeg",
@@ -71,7 +100,8 @@ export default function AstroForm() {
 
       await apiCreateProfile(token, formData);
       Alert.alert("Success", "Profile created successfully!");
-      router.back();
+      setProfileExists(true);
+      await AsyncStorage.setItem("profileExists", "true"); // mark profile as created
     } catch (err: any) {
       console.error(err);
       Alert.alert("Error", err.message || "Failed to create profile");
@@ -80,6 +110,14 @@ export default function AstroForm() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#e0c878" />
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-white">
       {/* Header */}
@@ -87,25 +125,13 @@ export default function AstroForm() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#e0c878" />
         </TouchableOpacity>
-        <Text className="text-lg font-bold text-[#e0c878] ml-[80px]">Create Profile</Text>
+        <Text className="text-lg font-bold text-[#e0c878] ml-[50px]">
+          {profileExists ? "Your Profile" : "Create Profile"}
+        </Text>
       </View>
 
       <ScrollView className="px-4 mt-4">
-        {/* Form */}
         <View className="bg-white rounded-2xl shadow p-4 mb-20 border border-gray-200">
-          {/* Name */}
-          <Text className="text-gray-700 mb-1">Full Name</Text>
-          <View className="flex-row items-center border border-[#e0c878] rounded-lg px-3 mb-4">
-            <Ionicons name="person-outline" size={18} color="#604f70" />
-            <TextInput
-              placeholder="Enter your name"
-              placeholderTextColor="#9e8b4e"
-              value={name}
-              onChangeText={setName}
-              className="flex-1 ml-2 py-2 text-black"
-            />
-          </View>
-
           {/* Bio */}
           <Text className="text-gray-700 mb-1">Bio</Text>
           <TextInput
@@ -115,6 +141,7 @@ export default function AstroForm() {
             onChangeText={setBio}
             className="border border-[#e0c878] rounded-lg px-3 py-2 mb-4 text-black"
             multiline
+            editable={!profileExists}
           />
 
           {/* Skills */}
@@ -125,6 +152,7 @@ export default function AstroForm() {
             value={skills}
             onChangeText={setSkills}
             className="border border-[#e0c878] rounded-lg px-3 py-2 mb-4 text-black"
+            editable={!profileExists}
           />
 
           {/* Languages */}
@@ -135,6 +163,7 @@ export default function AstroForm() {
             value={languages}
             onChangeText={setLanguages}
             className="border border-[#e0c878] rounded-lg px-3 py-2 mb-4 text-black"
+            editable={!profileExists}
           />
 
           {/* Price */}
@@ -146,6 +175,7 @@ export default function AstroForm() {
             onChangeText={setPrice}
             keyboardType="numeric"
             className="border border-[#e0c878] rounded-lg px-3 py-2 mb-4 text-black"
+            editable={!profileExists}
           />
 
           {/* Experience */}
@@ -157,6 +187,7 @@ export default function AstroForm() {
             onChangeText={setExperience}
             keyboardType="numeric"
             className="border border-[#e0c878] rounded-lg px-3 py-2 mb-4 text-black"
+            editable={!profileExists}
           />
 
           {/* Profile Picture */}
@@ -164,9 +195,14 @@ export default function AstroForm() {
           <TouchableOpacity
             className="bg-[#e0c878] py-3 rounded-lg mb-2 items-center"
             onPress={pickImage}
+            disabled={profileExists}
           >
             <Text className="text-[#2d1e3f] font-bold">
-              {profilePic ? "Change Profile Picture" : "Upload Profile Picture"}
+              {profilePic
+                ? profileExists
+                  ? "Profile Picture Uploaded"
+                  : "Change Profile Picture"
+                : "Upload Profile Picture"}
             </Text>
           </TouchableOpacity>
 
@@ -179,17 +215,25 @@ export default function AstroForm() {
           )}
 
           {/* Submit */}
-          <TouchableOpacity
-            className="bg-[#e0c878] py-3 rounded-lg mb-10 items-center"
-            onPress={handleCreateProfile}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#2d1e3f" />
-            ) : (
-              <Text className="text-[#2d1e3f] font-bold text-lg">Create Profile</Text>
-            )}
-          </TouchableOpacity>
+          {!profileExists && (
+            <TouchableOpacity
+              className="bg-[#e0c878] py-3 rounded-lg mb-10 items-center"
+              onPress={handleCreateProfile}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#2d1e3f" />
+              ) : (
+                <Text className="text-[#2d1e3f] font-bold text-lg">Create Profile</Text>
+              )}
+            </TouchableOpacity>
+          )}
+
+          {profileExists && (
+            <View className="bg-gray-200 py-3 rounded-lg mb-10 items-center">
+              <Text className="text-gray-700 font-bold text-lg">Profile Created!</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>

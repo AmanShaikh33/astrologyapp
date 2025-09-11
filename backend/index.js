@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
 import { connectDb } from "./database/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import astrologerRoutes from "./routes/astrologerRoutes.js";
@@ -12,6 +13,9 @@ connectDb();
 
 app.use(cors());
 app.use(express.json());
+
+// ✅ Serve the uploads folder as static
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/astrologers", astrologerRoutes);

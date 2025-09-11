@@ -12,6 +12,11 @@ export const createProfile = async (req, res) => {
       return res.status(400).json({ message: "Bio is required" });
     }
 
+    // ✅ Generate full URL for profilePic
+    const profilePicUrl = req.file
+      ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+      : null;
+
     const astrologer = await Astrologer.create({
       userId: req.user.id,
       bio,
@@ -19,7 +24,7 @@ export const createProfile = async (req, res) => {
       languages: languages.split(","),
       pricePerMinute,
       experience,
-      profilePic: req.file ? req.file.path : null,
+      profilePic: profilePicUrl,
       isApproved: "pending"
     });
 
@@ -28,6 +33,7 @@ export const createProfile = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 // Get My Profile
@@ -43,13 +49,20 @@ export const getMyProfile = async (req, res) => {
 
 // Update Profile
 
-
 export const updateProfile = async (req, res) => {
   try {
     const astrologer = await Astrologer.findOne({ userId: req.user.id });
 
     if (!astrologer) {
       return res.status(404).json({ message: "Profile not found" });
+    }
+
+    // 🚫 Block updates if profile is not approved
+    if (astrologer.isApproved !== "approved") {
+      return res.status(403).json({
+        success: false,
+        message: "Your profile is still pending approval. You cannot edit it until admin approves.",
+      });
     }
 
     const { bio, skills, languages, pricePerMinute, experience, availability } = req.body;
@@ -62,11 +75,7 @@ export const updateProfile = async (req, res) => {
     astrologer.availability = availability || astrologer.availability;
 
     if (req.file) {
-      // Delete old profile picture if exists
-      if (astrologer.profilePic && fs.existsSync(astrologer.profilePic)) {
-        fs.unlinkSync(astrologer.profilePic);
-      }
-      astrologer.profilePic = req.file.path;
+      astrologer.profilePic = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
     }
 
     const updatedProfile = await astrologer.save();
@@ -75,6 +84,8 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
 
 
 // Delete Profile
@@ -171,8 +182,18 @@ export const updateAvailability = async (req, res) => {
   }
 };
 
+// controllers/astrologerController.js // adjust path
 
-
+// controllers/astrologerController.js
+export const getApprovedAstrologers = async (req, res) => {
+  try {
+    const astrologers = await Astrologer.find({ isApproved: "approved" });
+    res.status(200).json(astrologers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch approved astrologers" });
+  }
+};
 
 
 

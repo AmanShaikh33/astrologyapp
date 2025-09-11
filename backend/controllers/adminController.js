@@ -2,12 +2,13 @@ import Astrologer from "../models/Astrologer.js";
 // 1. Get all pending astrologers
 export const getPendingAstrologers = async (req, res) => {
   try {
-    const astrologers = await Astrologer.find({ isApproved: false });
+    const astrologers = await Astrologer.find({ isApproved: "pending" });
     res.status(200).json({ success: true, count: astrologers.length, astrologers });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // 2. Approve astrologer
 export const approveAstrologer = async (req, res) => {
