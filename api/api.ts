@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_URL = "http://192.168.144.71:5000/api"; // Replace with your backend URL
+const API_URL = "https://astrologyapp-1.onrender.com/api";
+ // Replace with your backend URL
 // const API_URL = "http://localhost:5000/api"; // For iOS simulator
 
 const api = axios.create({

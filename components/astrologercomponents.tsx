@@ -32,13 +32,15 @@ const AstrologerCard: React.FC<Props> = ({
 }) => {
   const router = useRouter();
 
+  const BASE_URL = "https://astrologyapp-1.onrender.com";
+
   // Normalize profilePic
   const normalizedPic =
-    profilePic && profilePic.startsWith("http")
-      ? profilePic
-      : profilePic
-      ? `http://192.168.0.174:5000/${profilePic.replace(/\\/g, "/")}`
-      : null;
+  profilePic && profilePic.startsWith("http")
+    ? profilePic
+    : profilePic
+    ? `${BASE_URL}/${profilePic.replace(/\\/g, "/")}`
+    : null;
 
   return (
     <View className="flex-row items-center bg-white p-4 rounded-2xl border border-[#2d1e3f] shadow-md mb-4">
