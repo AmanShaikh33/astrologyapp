@@ -6,7 +6,10 @@ const astrologerSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
-
+  name: {  // <-- added name field
+    type: String,
+    required: true
+  },
   bio: {
     type: String,
     required: true
@@ -31,11 +34,11 @@ const astrologerSchema = new mongoose.Schema({
     type: String
   },
   availability: {
-  type: String,
-  enum: ["online", "offline"],
-  default: "offline"
-},
-isApproved: {
+    type: String,
+    enum: ["online", "offline"],
+    default: "offline"
+  },
+  isApproved: {
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: "pending"

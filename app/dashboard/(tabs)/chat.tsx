@@ -5,9 +5,11 @@ import { useRouter } from "expo-router";
 import AstrologerComponent from "../../../components/astrologercomponents"; // adjust path
 import { apiGetApprovedAstrologers } from "../../../api/api";
 
+
 type AstrologerType = {
   _id: string;
   name: string;
+  bio?: string;
   skills: string;
   languages: string;
   experience: string;
@@ -16,6 +18,7 @@ type AstrologerType = {
   orders?: number;
   availability: "online" | "offline" | "busy" | string;
   waitTime?: string;
+  profilePic?: string;
 };
 
 const Chat = () => {
@@ -57,7 +60,12 @@ const Chat = () => {
   }
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView
+      className="flex-1 bg-gray-50"
+      contentContainerStyle={{
+        paddingBottom: 120, // ✅ extra space so last card is visible above tab bar
+      }}
+    >
       {/* Header */}
       <View className="flex-row items-center p-4 border-b border-gray-200 bg-[#2d1e3f] pt-[40px]">
         <Ionicons
@@ -78,19 +86,21 @@ const Chat = () => {
             No approved astrologers available.
           </Text>
         ) : (
-          astrologers.map((astro) => (
-            <AstrologerComponent
-              key={astro._id}
-              name={astro.name}
-              skills={astro.skills}
-              languages={astro.languages}
-              experience={astro.experience}
-              price={astro.pricePerMinute || 0}
-              oldPrice={astro.oldPrice}
-              orders={astro.orders || 0}
-              status={astro.availability}
-              waitTime={astro.waitTime}
-            />
+           astrologers.map((astro) => (
+              <AstrologerComponent
+                key={astro._id}
+                name={astro.name}
+                bio={astro.bio}
+                skills={astro.skills}
+                languages={astro.languages}
+                experience={astro.experience}
+                price={astro.pricePerMinute}
+                oldPrice={astro.oldPrice}
+                orders={astro.orders}
+                status={astro.availability}
+                waitTime={astro.waitTime}
+                profilePic={astro.profilePic}
+              />
           ))
         )}
       </View>

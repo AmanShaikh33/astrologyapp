@@ -14,7 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiGetMyProfile, apiGetMe, apiUpdateProfile } from "../../../api/api";
 import { Ionicons } from "@expo/vector-icons";
 
-const BASE_URL = "http://192.168.0.174:5000"; // Your backend URL
+const BASE_URL = "http://192.168.144.71:5000"; // Your backend URL
 
 export default function Profile({ navigation }: any) {
   const [profile, setProfile] = useState<any>(null);
@@ -23,6 +23,7 @@ export default function Profile({ navigation }: any) {
   const [editModalVisible, setEditModalVisible] = useState(false);
 
   // Editable fields (local state for modal)
+  const [name, setName] = useState(""); // <-- added name
   const [bio, setBio] = useState("");
   const [skills, setSkills] = useState("");
   const [languages, setLanguages] = useState("");
@@ -43,6 +44,7 @@ export default function Profile({ navigation }: any) {
       setProfile(data);
 
       // Pre-fill fields for editing
+      setName(data.name || ""); // <-- set name
       setBio(data.bio || "");
       setSkills(Array.isArray(data.skills) ? data.skills.join(", ") : data.skills || "");
       setLanguages(Array.isArray(data.languages) ? data.languages.join(", ") : data.languages || "");
@@ -66,6 +68,7 @@ export default function Profile({ navigation }: any) {
       if (!token) return;
 
       const formData = new FormData();
+      formData.append("name", name); // <-- include name in update
       formData.append("bio", bio);
       formData.append("skills", skills);
       formData.append("languages", languages);
@@ -99,7 +102,6 @@ export default function Profile({ navigation }: any) {
     );
   }
 
-  // ✅ Fix the image URL
   const imageUrl = profile.profilePic
     ? profile.profilePic.startsWith("http")
       ? profile.profilePic
@@ -130,7 +132,7 @@ export default function Profile({ navigation }: any) {
                 <Text className="text-gray-600">No Image</Text>
               </View>
             )}
-            <Text className="text-xl font-bold text-[#2d1e3f] mt-2">{userName}</Text>
+            <Text className="text-xl font-bold text-[#2d1e3f] mt-2">{profile.name || userName}</Text>
           </View>
 
           {/* Details Section */}
@@ -177,7 +179,7 @@ export default function Profile({ navigation }: any) {
             </View>
           </View>
 
-          {/* 🔹 Edit Button OR Message */}
+          {/* Edit Button OR Message */}
           {profile.isApproved === "approved" ? (
             <TouchableOpacity
               className="bg-[#e0c878] mt-6 py-3 rounded-lg items-center"
@@ -195,13 +197,21 @@ export default function Profile({ navigation }: any) {
         </View>
       </ScrollView>
 
-      {/* 🔹 Edit Profile Modal */}
+      {/* Edit Profile Modal */}
       <Modal visible={editModalVisible} animationType="slide" transparent={true}>
         <View className="flex-1 bg-black bg-opacity-50 justify-center items-center">
           <View className="bg-white w-11/12 rounded-2xl p-6">
             <Text className="text-xl font-bold text-[#2d1e3f] mb-4">Edit Profile</Text>
 
             <ScrollView>
+              {/* Name input */}
+              <TextInput
+                placeholder="Name"
+                value={name}
+                onChangeText={setName}
+                className="border border-gray-300 rounded-lg px-3 py-2 mb-3 text-black"
+              />
+
               <TextInput
                 placeholder="Bio"
                 value={bio}

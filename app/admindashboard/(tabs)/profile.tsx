@@ -6,16 +6,19 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   apiGetAstrologersWithFilter,
   apiApproveAstrologer,
   apiRejectAstrologer,
+  apiAdminDeleteAstrologer, // new API
 } from "../../../api/api";
 
 interface Astrologer {
   _id: string;
+  name: string;
   bio: string;
   skills: string[];
   languages: string[];
@@ -39,14 +42,11 @@ export default function AdminAstrologers() {
         return;
       }
 
-      const data = await apiGetAstrologersWithFilter(token); // Fetch all
+      const data = await apiGetAstrologersWithFilter(token);
       setAstrologers(data.astrologers || []);
     } catch (error: any) {
       console.error(error);
-      Alert.alert(
-        "Error",
-        error.message || "Failed to fetch astrologers"
-      );
+      Alert.alert("Error", error.message || "Failed to fetch astrologers");
     } finally {
       setLoading(false);
     }
@@ -82,6 +82,33 @@ export default function AdminAstrologers() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this astrologer?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem("token");
+              if (!token) return;
+
+              await apiAdminDeleteAstrologer(token, id); // call backend
+              Alert.alert("Success", "Astrologer deleted!");
+              fetchAstrologers();
+            } catch (error: any) {
+              console.error(error);
+              Alert.alert("Error", error.message || "Failed to delete astrologer");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
@@ -100,7 +127,21 @@ export default function AdminAstrologers() {
 
   const renderItem = ({ item }: { item: Astrologer }) => (
     <View className="bg-white p-4 mb-3 rounded-xl border border-gray-200 shadow">
-      <Text className="text-lg font-bold mb-1">Bio: {item.bio}</Text>
+      <View className="flex-row items-center mb-2">
+        {item.profilePic ? (
+          <Image
+            source={{ uri: item.profilePic }}
+            className="w-12 h-12 rounded-full mr-3"
+          />
+        ) : (
+          <View className="w-12 h-12 rounded-full bg-gray-300 mr-3 justify-center items-center">
+            <Text className="text-gray-600">N/A</Text>
+          </View>
+        )}
+        <Text className="text-xl font-bold text-[#2d1e3f]">{item.name}</Text>
+      </View>
+
+      <Text className="text-lg font-semibold mb-1">Bio: {item.bio}</Text>
       <Text>Skills: {item.skills.join(", ")}</Text>
       <Text>Languages: {item.languages.join(", ")}</Text>
       <Text>Price/Min: ₹{item.pricePerMinute}</Text>
@@ -113,32 +154,47 @@ export default function AdminAstrologers() {
         Status: {item.isApproved}
       </Text>
 
-      {item.isApproved === "pending" && (
-        <View className="flex-row mt-3 space-x-4">
-          <TouchableOpacity
-            className="bg-green-500 px-4 py-2 rounded"
-            onPress={() => handleApprove(item._id)}
-          >
-            <Text className="text-white font-bold">Approve</Text>
-          </TouchableOpacity>
+      <View className="flex-row mt-3 space-x-4">
+        {item.isApproved === "pending" && (
+          <>
+            <TouchableOpacity
+              className="bg-green-500 px-4 py-2 rounded"
+              onPress={() => handleApprove(item._id)}
+            >
+              <Text className="text-white font-bold">Approve</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            className="bg-red-500 px-4 py-2 rounded"
-            onPress={() => handleReject(item._id)}
-          >
-            <Text className="text-white font-bold">Reject</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+            <TouchableOpacity
+              className="bg-red-500 px-4 py-2 rounded"
+              onPress={() => handleReject(item._id)}
+            >
+              <Text className="text-white font-bold">Reject</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* Delete button */}
+        <TouchableOpacity
+          className="bg-gray-600 px-4 py-2 rounded"
+          onPress={() => handleDelete(item._id)}
+        >
+          <Text className="text-white font-bold">Delete</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
   return (
-    <View className="flex-1 bg-gray-100 p-4">
+    <View className="flex-1 bg-gray-100">
       <FlatList
         data={astrologers}
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 120,
+        }}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );

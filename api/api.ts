@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://192.168.0.174:5000/api"; // Replace with your backend URL
+const API_URL = "http://192.168.144.71:5000/api"; // Replace with your backend URL
 // const API_URL = "http://localhost:5000/api"; // For iOS simulator
 
 const api = axios.create({
@@ -181,6 +181,18 @@ export const apiGetApprovedAstrologers = async () => {
     throw error.response?.data || { message: "Get approved astrologers failed" };
   }
 };
+
+export const apiAdminDeleteAstrologer = async (token: string, id: string) => {
+  try {
+    const res = await api.delete(`/astrologers/admin/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.data;
+  } catch (error: any) {
+    throw error.response?.data || { message: "Delete astrologer failed" };
+  }
+};
+
 
 
 

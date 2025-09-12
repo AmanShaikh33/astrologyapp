@@ -18,6 +18,7 @@ import { apiCreateProfile, apiGetMyProfile } from "../../../api/api";
 export default function AstroForm() {
   const router = useRouter();
 
+  const [name, setName] = useState(""); // <-- new state
   const [bio, setBio] = useState("");
   const [skills, setSkills] = useState("");
   const [languages, setLanguages] = useState("");
@@ -25,7 +26,7 @@ export default function AstroForm() {
   const [experience, setExperience] = useState("");
   const [profilePic, setProfilePic] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [profileExists, setProfileExists] = useState(false); // track if profile is created
+  const [profileExists, setProfileExists] = useState(false);
 
   // Check if profile already exists
   const fetchProfile = async () => {
@@ -37,6 +38,7 @@ export default function AstroForm() {
       const res = await apiGetMyProfile(token);
       if (res.profile) {
         setProfileExists(true);
+        setName(res.profile.name || ""); // <-- set existing name
         setBio(res.profile.bio || "");
         setSkills(res.profile.skills?.join(", ") || "");
         setLanguages(res.profile.languages?.join(", ") || "");
@@ -56,7 +58,7 @@ export default function AstroForm() {
   }, []);
 
   const pickImage = async () => {
-    if (profileExists) return; // disable picking image
+    if (profileExists) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
@@ -68,7 +70,7 @@ export default function AstroForm() {
   };
 
   const handleCreateProfile = async () => {
-    if (!bio || !skills || !languages || !price || !experience) {
+    if (!name || !bio || !skills || !languages || !price || !experience) {
       Alert.alert("Error", "Please fill all fields");
       return;
     }
@@ -77,6 +79,7 @@ export default function AstroForm() {
 
     try {
       const formData = new FormData();
+      formData.append("name", name); // <-- append name
       formData.append("bio", bio);
       formData.append("skills", skills);
       formData.append("languages", languages);
@@ -101,7 +104,7 @@ export default function AstroForm() {
       await apiCreateProfile(token, formData);
       Alert.alert("Success", "Profile created successfully!");
       setProfileExists(true);
-      await AsyncStorage.setItem("profileExists", "true"); // mark profile as created
+      await AsyncStorage.setItem("profileExists", "true");
     } catch (err: any) {
       console.error(err);
       Alert.alert("Error", err.message || "Failed to create profile");
@@ -120,7 +123,6 @@ export default function AstroForm() {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Header */}
       <View className="flex-row items-center p-4 border-b border-gray-200 bg-[#2d1e3f] pt-[40px]">
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#e0c878" />
@@ -132,6 +134,17 @@ export default function AstroForm() {
 
       <ScrollView className="px-4 mt-4">
         <View className="bg-white rounded-2xl shadow p-4 mb-20 border border-gray-200">
+          {/* Name */}
+          <Text className="text-gray-700 mb-1">Name</Text>
+          <TextInput
+            placeholder="Enter your name"
+            placeholderTextColor="#9e8b4e"
+            value={name}
+            onChangeText={setName}
+            className="border border-[#e0c878] rounded-lg px-3 py-2 mb-4 text-black"
+            editable={!profileExists}
+          />
+
           {/* Bio */}
           <Text className="text-gray-700 mb-1">Bio</Text>
           <TextInput
@@ -206,7 +219,6 @@ export default function AstroForm() {
             </Text>
           </TouchableOpacity>
 
-          {/* Show selected image */}
           {profilePic && (
             <Image
               source={{ uri: profilePic.uri }}
@@ -214,7 +226,6 @@ export default function AstroForm() {
             />
           )}
 
-          {/* Submit */}
           {!profileExists && (
             <TouchableOpacity
               className="bg-[#e0c878] py-3 rounded-lg mb-10 items-center"
