@@ -4,13 +4,13 @@ import React, { useState, useEffect } from 'react';
 const ChatPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Show modal on first load
+  
   useEffect(() => {
     setModalVisible(true);
   }, []);
 
   const handlePayNow = () => {
-    // You can navigate to payment page or handle payment logic
+    
     setModalVisible(false);
     alert('Redirecting to payment...');
   };

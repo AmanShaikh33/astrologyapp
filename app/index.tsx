@@ -9,26 +9,26 @@ export default function Index() {
   const { width, height } = useWindowDimensions();
   const [loading, setLoading] = useState(true);
 
-  // Check if user is already logged in
+ 
   useEffect(() => {
     const checkLogin = async () => {
       const token = await AsyncStorage.getItem("token");
       const userStr = await AsyncStorage.getItem("userData");
       if (token && userStr) {
         const user = JSON.parse(userStr);
-        // Redirect based on role
+        
         if (user.role === "admin") router.replace("/admindashboard/home");
         else if (user.role === "user") router.replace("/dashboard/home");
         else if (user.role === "astrologer") router.replace("/astrologerdashboard/home");
         else router.replace("/login");
       } else {
-        setLoading(false); // show splash page if not logged in
+        setLoading(false);
       }
     };
     checkLogin();
   }, []);
 
-  // Animation for the astrology image
+ 
   const imageScale = useRef(new Animated.Value(0.95)).current;
   useEffect(() => {
     Animated.loop(
@@ -67,12 +67,12 @@ export default function Index() {
 
   return (
     <View className="flex-1 bg-[#2d1e3f] items-center justify-center relative px-6">
-      {/* Floating Stars */}
+      
       {stars.map((star, index) => (
         <View key={index} className={star.style} />
       ))}
 
-      {/* Animated Astrology Image */}
+   
       <Animated.Image
         source={astroappimg}
         className="w-[300px] h-[400px] rounded-xl mb-8 shadow-2xl"
@@ -80,7 +80,7 @@ export default function Index() {
         resizeMode="cover"
       />
 
-      {/* Welcome Text */}
+      
       <Text className="text-[#e0c878] text-4xl font-extrabold text-center mb-2">
         Welcome
       </Text>
@@ -88,7 +88,7 @@ export default function Index() {
         Explore the mystical world of astrology with personalized guidance
       </Text>
 
-      {/* Pulsing Start Now Button */}
+      
       <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
         <TouchableOpacity
           onPress={() => router.push("/(auth)/login")}

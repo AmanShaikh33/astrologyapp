@@ -1,9 +1,7 @@
 import axios from "axios";
 
 const API_URL = "https://astrologyapp-1.onrender.com/api";
- // Replace with your backend URL
-// const API_URL = "http://localhost:5000/api"; // For iOS simulator
-
+ 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -25,7 +23,7 @@ export const apiRegister = async (data: any) => {
 export const apiLogin = async (data: any) => {
   try {
     const res = await api.post("/auth/login", data);
-    return res.data; // { token: string, user: {...} }
+    return res.data; 
   } catch (error: any) {
     throw error.response?.data || { message: "Login failed" };
   }
@@ -36,15 +34,13 @@ export const apiGetMe = async (token: string) => {
     const res = await api.get("/auth/me", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return res.data; // returns user object
+    return res.data; 
   } catch (error: any) {
     throw error.response?.data || { message: "Fetching user failed" };
   }
 };
 
-/* ------------------- ASTROLOGER APIs ------------------- */
 
-// Create profile (with optional profilePic)
 export const apiCreateProfile = async (token: string, formData: FormData) => {
   try {
     const res = await api.post("/astrologers/profile", formData, {
@@ -56,7 +52,7 @@ export const apiCreateProfile = async (token: string, formData: FormData) => {
   }
 };
 
-// Get my profile
+
 export const apiGetMyProfile = async (token: string) => {
   try {
     const res = await api.get("/astrologers/my-profile", {
@@ -68,7 +64,7 @@ export const apiGetMyProfile = async (token: string) => {
   }
 };
 
-// Update profile
+
 export const apiUpdateProfile = async (token: string, formData: FormData) => {
   try {
     const res = await api.put("/astrologers/profile", formData, {
@@ -80,7 +76,7 @@ export const apiUpdateProfile = async (token: string, formData: FormData) => {
   }
 };
 
-// Delete profile
+
 export const apiDeleteProfile = async (token: string) => {
   try {
     const res = await api.delete("/astrologers/profile", {
@@ -92,7 +88,6 @@ export const apiDeleteProfile = async (token: string) => {
   }
 };
 
-// Update availability
 export const apiUpdateAvailability = async (token: string, availability: "online" | "offline") => {
   try {
     const res = await api.put("/astrologers/status", { availability }, {
@@ -104,7 +99,7 @@ export const apiUpdateAvailability = async (token: string, availability: "online
   }
 };
 
-// Get all astrologers with optional filters
+
 export const apiGetAllAstrologers = async (token: string, filters?: {
   skills?: string;
   languages?: string;
@@ -136,47 +131,46 @@ export const apiGetPendingAstrologers = async (token: string) => {
   }
 };
 
-// Approve astrologer
+
 export const apiApproveAstrologer = async (token: string, id: string) => {
   try {
     const res = await api.put(`/admin/astrologers/approve/${id}`, {}, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return res.data; // { message, astrologer }
+    return res.data; 
   } catch (error: any) {
     throw error.response?.data || { message: "Approve astrologer failed" };
   }
 };
 
-// Reject astrologer (delete)
+
 export const apiRejectAstrologer = async (token: string, id: string) => {
   try {
     const res = await api.delete(`/admin/astrologers/reject/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return res.data; // { message }
+    return res.data; 
   } catch (error: any) {
     throw error.response?.data || { message: "Reject astrologer failed" };
   }
 };
 
-// Get astrologers with filter (approved/pending)
 export const apiGetAstrologersWithFilter = async (token: string, status?: "pending" | "approved") => {
   try {
     const res = await api.get("/admin/astrologers", {
       headers: { Authorization: `Bearer ${token}` },
       params: { status },
     });
-    return res.data; // { success, count, astrologers }
+    return res.data; 
   } catch (error: any) {
     throw error.response?.data || { message: "Get astrologers with filter failed" };
   }
 };
 
-// Get only approved astrologers (public endpoint for users)
+
 export const apiGetApprovedAstrologers = async () => {
   try {
-    const res = await api.get("/astrologers/approved"); // no token header
+    const res = await api.get("/astrologers/approved"); 
     return res.data;
   } catch (error: any) {
     throw error.response?.data || { message: "Get approved astrologers failed" };

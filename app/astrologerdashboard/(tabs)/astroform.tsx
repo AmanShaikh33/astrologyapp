@@ -18,7 +18,7 @@ import { apiCreateProfile, apiGetMyProfile } from "../../../api/api";
 export default function AstroForm() {
   const router = useRouter();
 
-  const [name, setName] = useState(""); // <-- new state
+  const [name, setName] = useState(""); 
   const [bio, setBio] = useState("");
   const [skills, setSkills] = useState("");
   const [languages, setLanguages] = useState("");
@@ -28,7 +28,7 @@ export default function AstroForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [profileExists, setProfileExists] = useState(false);
 
-  // Check if profile already exists
+
   const fetchProfile = async () => {
     try {
       setIsLoading(true);
@@ -38,7 +38,7 @@ export default function AstroForm() {
       const res = await apiGetMyProfile(token);
       if (res.profile) {
         setProfileExists(true);
-        setName(res.profile.name || ""); // <-- set existing name
+        setName(res.profile.name || ""); 
         setBio(res.profile.bio || "");
         setSkills(res.profile.skills?.join(", ") || "");
         setLanguages(res.profile.languages?.join(", ") || "");
@@ -79,7 +79,7 @@ export default function AstroForm() {
 
     try {
       const formData = new FormData();
-      formData.append("name", name); // <-- append name
+      formData.append("name", name); 
       formData.append("bio", bio);
       formData.append("skills", skills);
       formData.append("languages", languages);

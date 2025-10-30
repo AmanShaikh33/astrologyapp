@@ -19,14 +19,13 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Check if already logged in
   useEffect(() => {
     const checkLoggedIn = async () => {
       const token = await AsyncStorage.getItem("token");
       const userStr = await AsyncStorage.getItem("userData");
       if (token && userStr) {
         const user = JSON.parse(userStr);
-        // Role-based redirect
+    
         if (user.role === "admin") router.replace("/admindashboard/home");
         else if (user.role === "user") router.replace("/dashboard/home");
         else if (user.role === "astrologer") router.replace("/astrologerdashboard/home");
@@ -49,14 +48,14 @@ export default function LoginScreen() {
       const token = loginRes.token;
       if (!token) throw new Error("No token returned from login");
 
-      const user = loginRes.user || loginRes; // adjust based on API
+      const user = loginRes.user || loginRes; 
 
-      // Save in AsyncStorage
+   
       await AsyncStorage.setItem("token", token);
       await AsyncStorage.setItem("userData", JSON.stringify(user));
       await AsyncStorage.setItem("userType", user.role || "user");
 
-      // Role-based redirect
+    
       if (user.role === "admin") router.replace("/admindashboard/home");
       else if (user.role === "user") router.replace("/dashboard/home");
       else if (user.role === "astrologer") router.replace("/astrologerdashboard/home");

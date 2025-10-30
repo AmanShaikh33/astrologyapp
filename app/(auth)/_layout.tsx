@@ -1,4 +1,4 @@
-// app/(auth)/_layout.tsx
+
 import { Stack } from "expo-router";
 
 export default function AuthLayout() {
@@ -6,9 +6,9 @@ export default function AuthLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: "#2d1e3f" }, // Deep Purple background
-        headerStyle: { backgroundColor: "#3c2a52" }, // Dark Plum header if enabled
-        headerTintColor: "#e0c878", // Golden Yellow header text/icons
+        contentStyle: { backgroundColor: "#2d1e3f" }, 
+        headerStyle: { backgroundColor: "#3c2a52" }, 
+        headerTintColor: "#e0c878", 
       }}
     >
       <Stack.Screen name="login" />

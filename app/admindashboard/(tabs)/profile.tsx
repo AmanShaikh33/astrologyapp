@@ -13,7 +13,7 @@ import {
   apiGetAstrologersWithFilter,
   apiApproveAstrologer,
   apiRejectAstrologer,
-  apiAdminDeleteAstrologer, // new API
+  apiAdminDeleteAstrologer, 
 } from "../../../api/api";
 
 interface Astrologer {

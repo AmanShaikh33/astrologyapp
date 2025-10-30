@@ -52,7 +52,7 @@ export default function HoroscopeScreen() {
       </View>
 
       <ScrollView>
-        {/* Zodiac Selector */}
+       
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
