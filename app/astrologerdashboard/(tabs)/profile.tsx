@@ -14,7 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiGetMyProfile, apiGetMe, apiUpdateProfile } from "../../../api/api";
 import { Ionicons } from "@expo/vector-icons";
 
-const BASE_URL = "http://192.168.144.71:5000"; // Your backend URL
+const BASE_URL = "http://10.159.170.71:5000"; // Your backend URL
 
 export default function Profile({ navigation }: any) {
   const [profile, setProfile] = useState<any>(null);

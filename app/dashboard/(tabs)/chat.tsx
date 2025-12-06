@@ -89,6 +89,7 @@ const Chat = () => {
            astrologers.map((astro) => (
               <AstrologerComponent
                 key={astro._id}
+                _id={astro._id}
                 name={astro.name}
                 bio={astro.bio}
                 skills={astro.skills}

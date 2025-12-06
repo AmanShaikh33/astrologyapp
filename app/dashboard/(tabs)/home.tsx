@@ -11,15 +11,16 @@ import {
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import AstrologerComponent from "../../../components/astrologercomponents"; // adjust path
-import { apiGetApprovedAstrologers } from "../../../api/api"; // ✅ using same API as chat.tsx
+import AstrologerComponent from "../../../components/astrologercomponents";
+import { apiGetApprovedAstrologers, apiGetWalletBalance } from "../../../api/api";
+import { BlurView } from "expo-blur"; // ⭐ BLUR IMPORT
 
 type AstrologerType = {
   _id: string;
   name: string;
   bio?: string;
-  skills: string;
-  languages: string;
+  skills: any;
+  languages: any;
   experience: string;
   pricePerMinute: number;
   oldPrice?: number;
@@ -36,6 +37,23 @@ export default function HomeScreen() {
   const [astrologers, setAstrologers] = useState<AstrologerType[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  // ⭐ Modal states
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedAstro, setSelectedAstro] = useState<any>(null);
+
+  const fetchWallet = async (userId: string) => {
+    try {
+      const res = await apiGetWalletBalance(userId);
+      if (res.success) {
+        setWalletBalance(res.balance);
+      }
+    } catch (err) {
+      console.log("Wallet fetch error:", err);
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -50,7 +68,8 @@ export default function HomeScreen() {
         const parsedUser = JSON.parse(userStr);
         setUser(parsedUser);
 
-        // ✅ fetch approved astrologers from API
+        await fetchWallet(parsedUser._id);
+
         const data = await apiGetApprovedAstrologers();
         setAstrologers(data);
       } catch (err: any) {
@@ -89,27 +108,42 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Header */}
-      <View className="bg-[#2d1e3f] px-5 pt-10 pb-4 flex-row items-center justify-between">
-        <View className="flex-row items-center">
-          <Ionicons name="person-circle" size={40} color="#e0c878" />
-          <Text className="text-xl font-bold text-[#e0c878] ml-2">
-            Hi {user?.name || "User"}
-          </Text>
+      {/* HEADER */}
+      <View className="bg-[#2d1e3f] px-5 pt-10 pb-4">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center">
+            <Ionicons name="person-circle" size={40} color="#e0c878" />
+            <Text className="text-xl font-bold text-[#e0c878] ml-2">
+              Hi {user?.name || "User"}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleLogout}
+            className="bg-[#e0c878] px-3 py-1 rounded-lg"
+          >
+            <Text className="text-[#2d1e3f] font-semibold">Logout</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          onPress={handleLogout}
-          className="bg-[#e0c878] px-3 py-1 rounded-lg"
-        >
-          <Text className="text-[#2d1e3f] font-semibold">Logout</Text>
-        </TouchableOpacity>
+
+        <View className="flex-row justify-between items-center mt-4">
+          <View className="bg-white px-3 py-1 rounded-lg">
+            <Text className="text-[#2d1e3f] font-semibold">
+              Coins: {walletBalance}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            onPress={() => router.push("/dashboard/addmoney")}
+            className="bg-[#e0c878] px-4 py-2 rounded-lg"
+          >
+            <Text className="text-[#2d1e3f] font-semibold">Add Money</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }} // ✅ keeps buttons visible above tab bar
-      >
-        {/* Search Bar */}
+      {/* LIST */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <View className="px-5 mt-4">
           <View className="bg-gray-200 rounded-full px-4 py-2 flex-row items-center">
             <Ionicons name="search" size={20} color="#2d1e3f" />
@@ -121,30 +155,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Feature Buttons */}
-        <View className="flex-row justify-around mt-5 px-5">
-          {[
-            { icon: "sunny", label: "Daily Horoscope" },
-            { icon: "grid", label: "Kundli Matching" },
-            { icon: "infinite", label: "Free Kundli" },
-            { icon: "chatbubble", label: "Chat" },
-          ].map((item, i) => (
-            <TouchableOpacity
-              key={i}
-              className="items-center"
-              onPress={() => console.log(item.label)}
-            >
-              <View className="w-16 h-16 rounded-full bg-[#e0c878] items-center justify-center">
-                <Ionicons name={item.icon as any} size={28} color="#2d1e3f" />
-              </View>
-              <Text className="text-xs mt-2 text-[#2d1e3f] text-center">
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Banner */}
         <View className="px-5 mt-6">
           <Image
             source={{
@@ -155,7 +165,6 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Astrologers List */}
         <View className="px-5 mt-6">
           {astrologers.length === 0 ? (
             <Text className="text-center text-gray-500 mt-6">
@@ -165,6 +174,7 @@ export default function HomeScreen() {
             astrologers.map((astro) => (
               <AstrologerComponent
                 key={astro._id}
+                _id={astro._id}
                 name={astro.name}
                 bio={astro.bio}
                 skills={astro.skills}
@@ -176,11 +186,104 @@ export default function HomeScreen() {
                 status={astro.availability}
                 waitTime={astro.waitTime}
                 profilePic={astro.profilePic}
+                onChatPress={() => {
+                  setSelectedAstro(astro);
+                  setModalVisible(true);
+                }}
               />
             ))
           )}
         </View>
       </ScrollView>
+
+      {/* ⭐ BLUR MODAL ⭐ */}
+      {modalVisible && selectedAstro && (
+        <BlurView
+          intensity={40}
+          tint="dark"
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <View className="bg-white w-11/12 rounded-2xl p-6">
+
+            {selectedAstro.profilePic && (
+              <Image
+                source={{
+                  uri: selectedAstro.profilePic.startsWith("http")
+                    ? selectedAstro.profilePic
+                    : `http://10.159.170.71:5000/${selectedAstro.profilePic.replace(/\\/g, "/")}`,
+                }}
+                className="w-24 h-24 rounded-full self-center mb-4"
+              />
+            )}
+
+            <Text className="text-xl font-bold text-center text-[#2d1e3f]">
+              {selectedAstro.name}
+            </Text>
+
+            <Text className="text-gray-600 mt-3">
+              <Text className="font-bold">Bio: </Text>
+              {selectedAstro.bio}
+            </Text>
+
+            <Text className="text-gray-600 mt-2">
+              <Text className="font-bold">Skills: </Text>
+              {Array.isArray(selectedAstro.skills)
+                ? selectedAstro.skills.join(", ")
+                : selectedAstro.skills}
+            </Text>
+
+            <Text className="text-gray-600 mt-2">
+              <Text className="font-bold">Languages: </Text>
+              {Array.isArray(selectedAstro.languages)
+                ? selectedAstro.languages.join(", ")
+                : selectedAstro.languages}
+            </Text>
+
+            <Text className="text-gray-600 mt-2">
+              <Text className="font-bold">Experience: </Text>
+              {selectedAstro.experience} years
+            </Text>
+
+            <Text className="text-lg font-bold mt-4 text-center text-[#2d1e3f]">
+              ₹{selectedAstro.pricePerMinute}/minute
+            </Text>
+
+            <View className="flex-row justify-between mt-6">
+              <TouchableOpacity
+                className="bg-gray-300 px-4 py-2 rounded-lg"
+                onPress={() => setModalVisible(false)}
+              >
+                <Text className="text-[#2d1e3f] font-semibold">Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="bg-[#e0c878] px-4 py-2 rounded-lg"
+                onPress={() => {
+                  setModalVisible(false);
+                 router.push({
+                   pathname: "/dashboard/chatpage",
+               params: {
+              astrologerId: selectedAstro._id,
+             pricePerMinute: selectedAstro.pricePerMinute.toString(),
+                 },
+              });
+                }}
+              >
+                <Text className="text-[#2d1e3f] font-semibold">Proceed</Text>
+              </TouchableOpacity>
+            </View>
+
+          </View>
+        </BlurView>
+      )}
     </View>
   );
 }

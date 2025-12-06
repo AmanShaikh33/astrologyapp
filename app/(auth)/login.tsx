@@ -36,38 +36,65 @@ export default function LoginScreen() {
     checkLoggedIn();
   }, []);
 
-  const onLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please enter email and password");
-      return;
-    }
+const onLogin = async () => {
+  if (!email || !password) {
+    Alert.alert("Error", "Please enter email and password");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const loginRes = await apiLogin({ email, password });
-      const token = loginRes.token;
-      if (!token) throw new Error("No token returned from login");
+  try {
+    console.log("🚀 Attempting login with:", { email });
+    const loginRes = await apiLogin({ email, password });
+    console.log("📦 Raw login response:", loginRes);
+    
+    const token = loginRes.token;
+    const user = loginRes.user || loginRes;
 
-      const user = loginRes.user || loginRes; // adjust based on API
+    console.log("✅ Login successful:", {
+      token: token ? "Present" : "Missing",
+      userId: user._id || user.id || "Missing",
+      role: user.role || "Missing"
+    });
 
-      // Save in AsyncStorage
-      await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem("userData", JSON.stringify(user));
-      await AsyncStorage.setItem("userType", user.role || "user");
+    if (!token) throw new Error("No token returned from login");
+    if (!user || !(user._id || user.id))
+      throw new Error("Invalid user data returned from backend");
 
-      // Role-based redirect
-      if (user.role === "admin") router.replace("/admindashboard/home");
-      else if (user.role === "user") router.replace("/dashboard/home");
-      else if (user.role === "astrologer") router.replace("/astrologerdashboard/home");
-      else router.replace("/dashboard/home");
+    // Save data with verification
+    await AsyncStorage.setItem("token", token);
+    await AsyncStorage.setItem("userId", user._id || user.id);
+    await AsyncStorage.setItem("userData", JSON.stringify(user));
+    await AsyncStorage.setItem("userType", user.role || "user");
 
-    } catch (error: any) {
-      Alert.alert("Login Failed", error.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Verify all storage operations
+    const stored = {
+      token: await AsyncStorage.getItem("token"),
+      userId: await AsyncStorage.getItem("userId"),
+      userData: await AsyncStorage.getItem("userData"),
+      userType: await AsyncStorage.getItem("userType")
+    };
+    console.log("💾 Stored values:", stored);
+
+    // Navigate based on role
+    const destination = user.role === "admin" 
+      ? "/admindashboard/home" 
+      : user.role === "astrologer"
+        ? "/astrologerdashboard/home"
+        : "/dashboard/home";
+    
+    console.log("🧭 Navigating to:", destination);
+    router.replace(destination);
+
+  } catch (error: any) {
+    console.log("❌ Login Error:", error);
+    Alert.alert("Login Failed", error.message || "Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <KeyboardAvoidingView
