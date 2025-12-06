@@ -25,12 +25,12 @@ const UserHome = () => {
         const parsedUser = JSON.parse(userStr);
 
         if (parsedUser.role !== "astrologer") {
-          router.replace("/login"); // if not astrologer
+          router.replace("/login"); 
           return;
         }
 
         setUser(parsedUser);
-        // Optionally, set initial availability if stored in userData
+       
         if (parsedUser.availability) setAvailability(parsedUser.availability);
       } catch (err) {
         console.error(err);
@@ -86,7 +86,6 @@ const UserHome = () => {
         Welcome, {user?.name || "User"}
       </Text>
 
-      {/* Availability Toggle */}
       <TouchableOpacity
         onPress={toggleAvailability}
         className={`py-3 px-6 rounded-lg mb-6 ${

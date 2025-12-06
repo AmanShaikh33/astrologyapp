@@ -35,11 +35,14 @@ const AstrologerCard: React.FC<Props> = ({
   profilePic,
   onChatPress, // ⭐ Receive callback
 }) => {
+  const router = useRouter();
+
+  // Normalize profilePic
   const normalizedPic =
     profilePic && profilePic.startsWith("http")
       ? profilePic
       : profilePic
-      ? `http://10.159.170.71:5000/${profilePic.replace(/\\/g, "/")}`
+      ? `http://192.168.0.174:5000/${profilePic.replace(/\\/g, "/")}`
       : null;
 
   return (

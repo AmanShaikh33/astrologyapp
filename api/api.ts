@@ -1,11 +1,10 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-/* ------------------- BASE SETUP ------------------- */
 
 
-const API_URL = "http://10.159.170.71:5000/api"; // Replace with your backend URL
-// const API_URL = "http://localhost:5000/api"; // For local testing
+const API_URL = "http://192.168.144.71:5000/api"; // Replace with your backend URL
+// const API_URL = "http://localhost:5000/api"; // For iOS simulator
 
 const api = axios.create({
   baseURL: API_URL,
@@ -59,9 +58,7 @@ export const apiLogin = async (data: any) => {
     });
     
     const res = await api.post("/auth/login", data);
-    console.log("📦 API Login Response:", res.data);
-    
-    return res.data;
+    return res.data; // { token: string, user: {...} }
   } catch (error: any) {
     console.log("🚨 API Login Error:", {
       status: error.response?.status,
@@ -77,13 +74,12 @@ export const apiGetMe = async (token: string) => {
     const res = await api.get("/auth/me", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return res.data;
+    return res.data; // returns user object
   } catch (error: any) {
     throw error.response?.data || { message: "Fetching user failed" };
   }
 };
 
-/* ------------------- ASTROLOGER APIs ------------------- */
 
 export const apiCreateProfile = async (token: string, formData: FormData) => {
   try {
@@ -99,6 +95,7 @@ export const apiCreateProfile = async (token: string, formData: FormData) => {
   }
 };
 
+// Get my profile
 export const apiGetMyProfile = async (token: string) => {
   try {
     const res = await api.get("/astrologers/my-profile", {
@@ -110,6 +107,7 @@ export const apiGetMyProfile = async (token: string) => {
   }
 };
 
+// Update profile
 export const apiUpdateProfile = async (token: string, formData: FormData) => {
   try {
     const res = await api.put("/astrologers/profile", formData, {
@@ -124,6 +122,7 @@ export const apiUpdateProfile = async (token: string, formData: FormData) => {
   }
 };
 
+// Delete profile
 export const apiDeleteProfile = async (token: string) => {
   try {
     const res = await api.delete("/astrologers/profile", {
@@ -135,10 +134,8 @@ export const apiDeleteProfile = async (token: string) => {
   }
 };
 
-export const apiUpdateAvailability = async (
-  token: string,
-  availability: "online" | "offline"
-) => {
+// Update availability
+export const apiUpdateAvailability = async (token: string, availability: "online" | "offline") => {
   try {
     const res = await api.put(
       "/astrologers/status",
@@ -151,18 +148,16 @@ export const apiUpdateAvailability = async (
   }
 };
 
-export const apiGetAllAstrologers = async (
-  token: string,
-  filters?: {
-    skills?: string;
-    languages?: string;
-    priceMin?: number;
-    priceMax?: number;
-    availability?: string;
-    page?: number;
-    limit?: number;
-  }
-) => {
+// Get all astrologers with optional filters
+export const apiGetAllAstrologers = async (token: string, filters?: {
+  skills?: string;
+  languages?: string;
+  priceMin?: number;
+  priceMax?: number;
+  availability?: string;
+  page?: number;
+  limit?: number;
+}) => {
   try {
     const res = await api.get("/astrologers", {
       headers: { Authorization: `Bearer ${token}` },
@@ -185,46 +180,47 @@ export const apiGetPendingAstrologers = async (token: string) => {
   }
 };
 
+// Approve astrologer
 export const apiApproveAstrologer = async (token: string, id: string) => {
   try {
     const res = await api.put(`/admin/astrologers/approve/${id}`, {}, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return res.data;
+    return res.data; // { message, astrologer }
   } catch (error: any) {
     throw error.response?.data || { message: "Approve astrologer failed" };
   }
 };
 
+// Reject astrologer (delete)
 export const apiRejectAstrologer = async (token: string, id: string) => {
   try {
     const res = await api.delete(`/admin/astrologers/reject/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return res.data;
+    return res.data; // { message }
   } catch (error: any) {
     throw error.response?.data || { message: "Reject astrologer failed" };
   }
 };
 
-export const apiGetAstrologersWithFilter = async (
-  token: string,
-  status?: "pending" | "approved"
-) => {
+// Get astrologers with filter (approved/pending)
+export const apiGetAstrologersWithFilter = async (token: string, status?: "pending" | "approved") => {
   try {
     const res = await api.get("/admin/astrologers", {
       headers: { Authorization: `Bearer ${token}` },
       params: { status },
     });
-    return res.data;
+    return res.data; // { success, count, astrologers }
   } catch (error: any) {
     throw error.response?.data || { message: "Get astrologers with filter failed" };
   }
 };
 
+// Get only approved astrologers (public endpoint for users)
 export const apiGetApprovedAstrologers = async () => {
   try {
-    const res = await api.get("/astrologers/approved");
+    const res = await api.get("/astrologers/approved"); // no token header
     return res.data;
   } catch (error: any) {
     throw error.response?.data || { message: "Get approved astrologers failed" };

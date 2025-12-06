@@ -10,7 +10,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { apiRegister } from "../../api/api"; // create a simple register API function
+import { apiRegister } from "../../api/api"; 
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("user"); // default role
+  const [role, setRole] = useState("user"); 
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -35,7 +35,7 @@ export default function RegisterScreen() {
     setLoading(true);
 
     try {
-      await apiRegister({ name, email, password, role }); // call your API
+      await apiRegister({ name, email, password, role }); 
       Alert.alert("Success", "Registration successful!");
       router.push("/login");
     } catch (error: any) {
@@ -92,7 +92,6 @@ export default function RegisterScreen() {
           onChangeText={setPassword}
         />
 
-        {/* Confirm Password */}
         <TextInput
           className="border rounded-xl p-3 mb-4"
           style={{ borderColor: "#9e8b4e", backgroundColor: "#604f70", color: "#e0c878" }}
@@ -103,7 +102,7 @@ export default function RegisterScreen() {
           onChangeText={setConfirmPassword}
         />
 
-        {/* Role Selection */}
+     
         <View className="flex-row justify-between mb-6">
           <TouchableOpacity
             onPress={() => setRole("user")}
@@ -123,7 +122,7 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Register Button */}
+        
         <TouchableOpacity
           className="py-3 rounded-xl shadow-md mb-4"
           style={{ backgroundColor: "#3c2a52" }}
