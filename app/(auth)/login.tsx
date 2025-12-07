@@ -61,7 +61,7 @@ const onLogin = async () => {
     if (!user || !(user._id || user.id))
       throw new Error("Invalid user data returned from backend");
 
-      const user = loginRes.user || loginRes; // adjust based on API
+    
 
       // Save in AsyncStorage
       await AsyncStorage.setItem("token", token);
