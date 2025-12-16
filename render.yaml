@@ -5,7 +5,7 @@ services:
     env: node
     region: oregon
     plan: free
-    repo: https://github.com/OWNER/REPO  # replace OWNER/REPO
+    repo: https://github.com/OWNER/REPO # replace OWNER/REPO
     branch: main
     buildCommand: cd backend && npm install
     startCommand: cd backend && npm start
