@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 
-const API_URL = "http://192.168.144.71:5000/api"; // Replace with your backend URL
+const API_URL = "http://10.77.193.71:5000/api"; // Replace with your backend URL
 // const API_URL = "http://localhost:5000/api"; // For iOS simulator
 
 const api = axios.create({
@@ -245,7 +245,7 @@ export const apiAdminDeleteAstrologer = async (token: string, id: string) => {
 export const apiCreateOrGetChatRoom = async (token, astrologerId = null, userId = null) => {
   const body = astrologerId ? { astrologerId } : { userId };
 
-  const response = await fetch("http://10.159.170.71:5000/api/chat/create-room", {
+  const response = await fetch("http://10.77.193.71:5000/api/chat/create-room", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

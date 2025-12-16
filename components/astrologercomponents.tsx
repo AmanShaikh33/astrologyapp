@@ -1,6 +1,6 @@
-import { Text, View, TouchableOpacity, Image } from "react-native";
-import React from "react";
 import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
   _id: string;
@@ -15,9 +15,7 @@ type Props = {
   status: "online" | "offline" | "busy" | string;
   waitTime?: string;
   profilePic?: string;
-
-  // ⭐ Add this
-  onChatPress?: () => void;
+  onChatPress?: () => void; // parent handles routing
 };
 
 const AstrologerCard: React.FC<Props> = ({
@@ -33,20 +31,19 @@ const AstrologerCard: React.FC<Props> = ({
   status,
   waitTime,
   profilePic,
-  onChatPress, // ⭐ Receive callback
+  onChatPress,
 }) => {
-  const router = useRouter();
 
-  // Normalize profilePic
   const normalizedPic =
     profilePic && profilePic.startsWith("http")
       ? profilePic
       : profilePic
-      ? `http://192.168.0.174:5000/${profilePic.replace(/\\/g, "/")}`
+      ? `http://10.77.193.71:5000/${profilePic.replace(/\\/g, "/")}`
       : null;
 
   return (
     <View className="flex-row items-center bg-white p-4 rounded-2xl border border-[#2d1e3f] shadow-md mb-4">
+      
       {/* Avatar */}
       {normalizedPic ? (
         <Image
@@ -90,7 +87,7 @@ const AstrologerCard: React.FC<Props> = ({
       {status === "online" ? (
         <TouchableOpacity
           className="bg-[#2d1e3f] px-4 py-2 rounded-lg border border-[#e0c878]"
-          onPress={onChatPress} // ⭐ TRIGGER MODAL INSTEAD OF NAVIGATING
+          onPress={onChatPress}
         >
           <Text className="text-[#e0c878] font-bold">Chat</Text>
         </TouchableOpacity>

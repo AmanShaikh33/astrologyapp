@@ -17,7 +17,7 @@ import { io } from "socket.io-client";
 import { apiCreateOrGetChatRoom, apiGetMessages } from "../../api/api";
 
 // SOCKET
-const socket = io("http://10.159.170.71:5000", {
+const socket = io("http://10.77.193.71:5000", {
   transports: ["websocket"],
   autoConnect: true,
 });

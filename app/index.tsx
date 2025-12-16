@@ -4,6 +4,8 @@ import astroappimg from "../assets/images/astroappimg.png";
 import React, { useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+
+
 export default function Index() {
   const router = useRouter();
   const { width, height } = useWindowDimensions();

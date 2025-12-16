@@ -25,7 +25,7 @@ interface Message {
   createdAt?: string;
 }
 
-const socket = io("http://10.159.170.71:5000", {
+const socket = io("http://10.77.193.71:5000", {
   transports: ["websocket"],
   autoConnect: true,
 });

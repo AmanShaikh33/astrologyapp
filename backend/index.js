@@ -1,18 +1,17 @@
-import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
-import path from "path";
+import dotenv from "dotenv";
+import express from "express";
 import { createServer } from "http";
+import path from "path";
 import { Server } from "socket.io";
 import { connectDb } from "./database/db.js";
 
-import authRoutes from "./routes/authRoutes.js";
-import astrologerRoutes from "./routes/astrologerRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
-import chatRoutes from "./routes/chatRoutes.js";
 import { Message } from "./models/Message.js";
 import User from "./models/User.js";
-import Astrologer from "./models/Astrologer.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import astrologerRoutes from "./routes/astrologerRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 
 dotenv.config();
@@ -21,6 +20,12 @@ connectDb();
 
 app.use(cors());
 app.use(express.json());
+
+// Lightweight request logger to confirm incoming requests from devices
+app.use((req, res, next) => {
+  console.log("INCOMING", req.method, req.url, req.ip);
+  next();
+});
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
@@ -197,4 +202,6 @@ async function checkStartBilling(roomId) {
   }, 60000);
 }
 
-server.listen(5000, () => console.log("Server running on port 5000"));
+// Bind to 0.0.0.0 so other devices on the LAN can connect
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));

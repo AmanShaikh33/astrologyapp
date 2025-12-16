@@ -1,0 +1,23 @@
+# Render configuration template. Update placeholders before using.
+services:
+  - type: web
+    name: astrotalk-backend
+    env: node
+    region: oregon
+    plan: free
+    repo: https://github.com/OWNER/REPO  # replace OWNER/REPO
+    branch: main
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: MONGO_URI
+        value: "" # set in Render dashboard instead of in repo
+      - key: JWT_SECRET
+        value: ""
+      - key: RAZORPAY_KEY_ID
+        value: ""
+      - key: RAZORPAY_KEY_SECRET
+        value: ""
+      - key: NODE_ENV
+        value: production
+    # If you use uploads, ensure persistent storage or S3 and set envs here
