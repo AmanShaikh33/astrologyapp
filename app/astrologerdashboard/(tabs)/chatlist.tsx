@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { apiGetUserChats } from "../../../api/api";
 import { io } from "socket.io-client";
 
-const socket = io("http://10.77.193.71:5000", { transports: ["websocket"] });
+const socket = io("https://astrologyapp-1.onrender.com", { transports: ["websocket"] });
 
 interface ChatPreview {
   _id: string;
